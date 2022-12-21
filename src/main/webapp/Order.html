@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>我的订单</title>
+    <style>
+        .el-table .warning-row {
+            background: oldlace;
+        }
+
+        .el-table .success-row {
+            background: #f0f9eb;
+        }
+    </style>
+
+</head>
+<body>
+<!--  导航条   -->
+<div id="tou">
+    <div class="line"></div>
+    <el-menu
+            :default-active="activeIndex2"
+            class="el-menu-demo"
+            mode="horizontal"
+            @select="handleSelect"
+            background-color="#545c64"
+            text-color="#fff"
+            active-text-color="#ffd04b">
+        <el-menu-item index="1"><a href="index.html"> 首页 </a></el-menu-item>
+        <el-submenu index="2">
+            <template slot="title">自助服务</template>
+            <el-menu-item index="2-1">行程管理</el-menu-item>
+            <el-menu-item index="2-2">服务办理</el-menu-item>
+            <el-menu-item index="2-3">售后服务</el-menu-item>
+        </el-submenu>
+        <el-menu-item index="3" >公告讯息</el-menu-item>
+        <el-menu-item index="4" >积分商城</el-menu-item>
+        <el-menu-item index="7"  style="float: right">
+            <div>
+                <template>
+                    <div class="demo-type">
+                        <div>
+                            <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"></el-avatar>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </el-menu-item>
+        <el-menu-item  index="6" style="float: right"><a href="User.html" target="_blank" >购买机票</a></el-menu-item>
+
+    </el-menu>
+</div>
+
+<style>
+    .el-header {
+        background-color: #66b1ff;
+        color: #333;
+        text-align: center;
+        line-height: 60px;
+    }
+</style>
+
+
+<div id="app">
+    <!--按钮-->
+
+    <el-row>
+        <el-button type="primary" plain @click="dialogVisible = true">登录</el-button>
+    </el-row>
+    <!--添加数据对话框表单-->
+    <el-dialog
+            title="编辑"
+            :visible.sync="dialogVisible"
+            width="30%"
+            >
+
+        <el-form ref="form" :model="user" label-width="80px">
+            <el-form-item label="姓名">
+                <el-input v-model="user.pName"></el-input>
+            </el-form-item>
+
+            <el-form-item label="身份证号">
+                <el-input v-model="user.pid"></el-input>
+            </el-form-item>
+
+            <el-form-item>
+                <el-button type="primary" @click="login">登录</el-button>
+                <el-button @click="dialogVisible = false">取消</el-button><!--dialogVisible=false为关闭窗口-->
+            </el-form-item>
+        </el-form>
+
+    </el-dialog>
+
+
+    <!--表格-->
+    <template>
+        <el-table
+                :data="tableData"
+                style="width: 100%"
+                :row-class-name="tableRowClassName"
+        >
+            <el-table-column
+                    type="selection"
+                    width="55">
+            </el-table-column>
+            <el-table-column
+                    type="index"
+                    width="50">
+            </el-table-column>
+
+            <el-table-column
+                    prop="fid"
+                    label="航班号"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="origin"
+                    label="出发地"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="destination"
+                    align="center"
+                    label="目的地">
+            </el-table-column>
+            <el-table-column
+                    prop="bDate"
+                    align="center"
+                    label="出发日期">
+            </el-table-column>
+
+            <el-table-column
+                    prop="bTime"
+                    align="center"
+                    label="起飞时间">
+            </el-table-column>
+
+            <el-table-column
+                    prop="price"
+                    align="center"
+                    label="价格">
+            </el-table-column>
+
+            <el-table-column
+                    align="center"
+                    label="操作">
+                <template slot-scope="scope">
+                    <el-row>
+                        <el-button type="danger" plain @click="deleteConfirm(scope.row)">退订</el-button>
+                    </el-row>
+                </template>
+                </el-table-column>
+
+        </el-table>
+    </template>
+
+</div>
+
+
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+<script src="js/axios-0.18.0.js"></script>
+<script>
+    new Vue({
+        el: "#app",
+        methods: {//里面定义方法
+            deleteConfirm(row){//点击删除后出现弹框，确认后再执行删除操作
+                this.$confirm('此操作您将退订该航班, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() =>{
+                    this.deleteOrder(row)//确认后执行退订
+                }).catch(() => {
+                    this.$message({
+                        type: 'warning',
+                        message: '已取消退订'
+                    })
+                })
+            },
+            login(){
+                var _this = this;
+                axios({
+                    method: "post",
+                    url: "http://localhost:8080/Flight-Demo/SelectPnameServlet",
+                    data: _this.user.pid
+                }).then(function (resp) {
+                    if (resp.data == _this.user.pName) {
+                        //登录成功，查询我的航班
+                        _this.selectMyOrder(_this.user.pid);
+                        _this.dialogVisible=false;
+                    } else {
+                        _this.$message({//登录失败
+                            message: "身份证与姓名不匹配",
+                            type: "error"
+                        })
+                    }
+                })
+            },
+            selectMyOrder(pid) {
+                var _this = this;
+                axios({
+                    method: "post",
+                    url: "http://localhost:8080/Flight-Demo/MyOrderSelectServlet",
+                    data: pid
+                }).then(function (resp) {
+                    _this.tableData = resp.data;
+                })
+            },
+            deleteOrder(row){//退订方法
+                var _this=this;
+                _this.fp.fid=row.fid;
+                _this.fp.pid=_this.user.pid;
+                axios({
+                    method:"post",
+                    url:"http://localhost:8080/Flight-Demo/DeleteOrderServlet",
+                    data:_this.fp
+                }).then(function (resp){
+                    if(resp.data=="success"){//退订成功
+                        _this.selectMyOrder(_this.fp.pid);//重新查询我的订单
+                        _this.$message({//退订成功后给出提示信息
+                            message: "退订成功",
+                            type: "success"
+                        })
+                    }
+                })
+            },
+            tableRowClassName({row, rowIndex}) {//控制颜色
+                if (rowIndex === 1) {
+                    return 'warning-row';
+                } else if (rowIndex === 3) {
+                    return 'success-row';
+                }
+                return '';
+            }
+        },
+        data() {
+            return {
+                // 添加数据对话框是否展示的标记
+                dialogVisible: false,
+                user:{
+                  pid:"",
+                  pName:""
+                },
+                fp:{
+                    fid:"",
+                    pid:""
+                },
+                //表格数据
+                tableData: []
+            }
+        }
+    })
+
+    new Vue({
+        el:"#tou"
+    })
+</script>
+</body>
+</html>

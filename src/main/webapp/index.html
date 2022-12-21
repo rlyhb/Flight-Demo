@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>导航页</title>
+</head>
+<body>
+<div id="app">
+    <el-row>
+        <el-button type="primary" plain @click="manager">管理员界面</el-button>
+        <el-button type="primary" plain @click="buy">购买机票</el-button>
+        <el-button type="primary" plain @click="myOrder">我的订单</el-button>
+    </el-row>
+</div>
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+<script>
+    new Vue({
+        el:"#app",
+        methods:{
+            manager(){
+                location.href="/Flight-Demo/Flight-manage.html"
+            },
+            buy(){
+                location.href="/Flight-Demo/User.html"
+            },
+            myOrder(){
+                location.href="/Flight-Demo/Order.html"
+            }
+        }
+    })
+</script>
+
+</body>
+</html>
